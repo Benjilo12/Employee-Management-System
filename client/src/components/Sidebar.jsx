@@ -13,6 +13,7 @@ import {
   ChevronRightIcon,
   LogOutIcon,
 } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 export const Sidebar = () => {
   const { pathname } = useLocation();
@@ -26,7 +27,7 @@ export const Sidebar = () => {
     setMobileOpen(false); // Replace with actual user fetching logic
   }, [pathname]);
 
-  const role = "" || "EMPLOYEE";
+  const role = "ADMIN" || "EMPLOYEE";
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutGridIcon },
@@ -40,7 +41,7 @@ export const Sidebar = () => {
 
   // Handle logout functionality
   const handleLogout = () => {
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   const sidebarContent = (
@@ -139,8 +140,14 @@ export const Sidebar = () => {
           })}
         </div>
 
-        {/* LOGOUT */}
-        <div className="p-3 border-t border-white/6">
+        {/* Theme and logout actions */}
+        <div className="p-3 border-t border-white/6 space-y-2">
+          <div className="flex items-center justify-between px-2 py-1">
+            <span className="text-[12px] font-medium text-slate-400">
+              Theme
+            </span>
+            <ThemeToggle />
+          </div>
           <button
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-[13px] font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200 duration-150 transition-all cursor-pointer"
             onClick={handleLogout}
