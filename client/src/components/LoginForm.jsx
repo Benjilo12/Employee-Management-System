@@ -2,8 +2,10 @@ import LoginLeftSide from "./LoginLeftSide";
 import { Link } from "react-router-dom";
 import { ArrowLeftIcon, EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const LoginForm = ({ role, title, subtitle }) => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -13,7 +15,8 @@ const LoginForm = ({ role, title, subtitle }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Add your login logic here
+    localStorage.setItem("ems_role", role?.toUpperCase() === "ADMIN" ? "ADMIN" : "EMPLOYEE");
+    navigate("/dashboard");
   };
 
   // Shared class for inputs to keep it clean

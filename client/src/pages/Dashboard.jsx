@@ -12,7 +12,10 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setData(dummyAdminDashboardData);
+    const role = localStorage.getItem("ems_role") || "ADMIN";
+    setData(
+      role === "ADMIN" ? dummyAdminDashboardData : dummyEmployeeDashboardData,
+    );
     setTimeout(() => {
       setLoading(false);
     }, 1000);
