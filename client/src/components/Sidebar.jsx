@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { dummyProfileData } from "../assets/assets";
 import {
   CalendarIcon,
+  BellIcon,
   FileTextIcon,
   LayoutGridIcon,
   MenuIcon,
@@ -27,7 +28,7 @@ export const Sidebar = () => {
     setMobileOpen(false); // Replace with actual user fetching logic
   }, [pathname]);
 
-  const role = "ADMIN" || "EMPLOYEE";
+  const role = localStorage.getItem("ems_role") || "ADMIN";
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutGridIcon },
@@ -36,6 +37,9 @@ export const Sidebar = () => {
       : { name: "Attendance", href: "/attendance", icon: CalendarIcon },
     { name: "Leave", href: "/leave", icon: FileTextIcon },
     { name: "PaySlips", href: "/payslips", icon: DollarSignIcon },
+    ...(role === "ADMIN"
+      ? [{ name: "Notifications", href: "/admin-notifications", icon: BellIcon }]
+      : []),
     { name: "Settings", href: "/settings", icon: SettingsIcon },
   ];
 

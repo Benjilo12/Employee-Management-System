@@ -1,6 +1,8 @@
 import { BuildingIcon, CalendarIcon, FileTextIcon } from "lucide-react";
+import { getNotifications } from "../utils/notifications";
 
 const AdminDashboard = ({ data }) => {
+  const notifications = getNotifications();
   const stats = [
     {
       icon: CalendarIcon,
@@ -75,6 +77,33 @@ const AdminDashboard = ({ data }) => {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-600 dark:bg-slate-800">
+        <h2 className="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">
+          Notifications
+        </h2>
+        {notifications.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-300">
+            No notifications sent yet.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {notifications.slice(0, 4).map((item) => (
+              <div
+                key={item.id}
+                className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+              >
+                <p className="font-medium text-slate-900 dark:text-slate-100">
+                  {item.title}
+                </p>
+                <p className="text-sm text-slate-600 dark:text-slate-300">
+                  {item.message}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

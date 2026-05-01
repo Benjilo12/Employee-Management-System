@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
 import { dummyEmployeeData, DEPARTMENTS } from "../assets/assets";
 import { useCallback } from "react";
-import { PlusIcon, Search } from "lucide-react";
+import { PlusIcon, Search, X } from "lucide-react";
+import EmpolyeeCard from "../components/EmpolyeeCard";
+import EmployeeForm from "../components/EmployeeForm";
 
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [editEmployee, setEditEmployee] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Simulate fetching employees from an API
   const fetchEmployess = useCallback(async () => {
@@ -32,6 +36,7 @@ const Employees = () => {
       .toLowerCase()
       .includes(search.toLowerCase()),
   );
+
   return (
     <div className="animate-fade-in">
       {/* header */}
@@ -40,7 +45,10 @@ const Employees = () => {
           <h1>Employees</h1>
           <p>Manage your team members and their information.</p>
         </div>
-        <button className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center cursor-pointer dark:bg-cyan-600-500 dark:hover:bg-cyan-600 dark:text-white">
+        <button
+          className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center cursor-pointer dark:bg-cyan-600-500 dark:hover:bg-cyan-600 dark:text-white"
+          onClick={() => setShowCreateModal(true)}
+        >
           <PlusIcon size={16} /> Add Employee
         </button>
       </div>
@@ -93,11 +101,106 @@ const Employees = () => {
                 No employees found.
               </p>
             ) : (
-              filtered.map((emp) => <p key={emp.id}>{emp.firstName}</p>)
+              filtered.map((emp) => (
+                <EmpolyeeCard
+                  key={emp.id}
+                  employee={emp}
+                  onDelete={fetchEmployess}
+                  onEdit={(e) => setEditEmployee(e)}
+                />
+              ))
             )}
           </div>
         )}
       </div>
+
+      {/* Create modals would go here */}
+      {showCreateModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center pt-10 p-4 bg-black/40 backdrop-blur-sm overflow-auto"
+          onClick={() => setShowCreateModal(false)}
+        >
+          <div
+            className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-3xl animate-fade-in mb-auto border border-slate-200 dark:border-slate-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <div className="flex items-center justify-between p-6 pb-0">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  Add New Employee
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                  Create a user account for a new employee.
+                </p>
+              </div>
+              <button
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-200 cursor-pointer"
+                onClick={() => setShowCreateModal(false)}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="p-6">
+              <EmployeeForm
+                onSuccess={() => {
+                  showCreateModal(false);
+                  fetchEmployess();
+                }}
+                onCancel={() => setShowCreateModal(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit modals would go here */}
+      {editEmployee && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto bg-black/40 backdrop-blur-sm"
+          onClick={() => setEditEmployee(null)}
+        >
+          <div
+            className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-3xl my-8 animate-fade-in border border-slate-200 dark:border-slate-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 pb-0">
+              {/* Left — title */}
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  Edit Employee
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                  Update the details for this employee.
+                </p>
+              </div>
+
+              {/* Right — X button ✅ */}
+              <button
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-200 cursor-pointer"
+                onClick={() => setEditEmployee(null)}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              <EmployeeForm
+                initialData={editEmployee}
+                onSuccess={() => {
+                  setEditEmployee(null);
+                  fetchEmployess();
+                }}
+                onCancel={() => setEditEmployee(null)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

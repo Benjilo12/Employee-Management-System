@@ -10,6 +10,7 @@ import Settings from "./pages/Settings";
 import Dashboard from "./pages/Dashboard";
 import Attendance from "./pages/Attendance";
 import LoginForm from "./components/LoginForm";
+import AdminNotifications from "./pages/AdminNotifications";
 function App() {
   return (
     <>
@@ -44,6 +45,7 @@ function App() {
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/leave" element={<Leave />} />
           <Route path="/payslips" element={<PaySlips />} />
+          <Route path="/admin-notifications" element={<AdminNotifications />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
 
