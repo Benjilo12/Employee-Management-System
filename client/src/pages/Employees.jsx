@@ -24,12 +24,12 @@ const Employees = () => {
     setTimeout(() => {
       setLoading(false);
     }, 1000);
-  }, []);
+  }, [selectedDepartment]);
 
   // Fetch employees on component mount
   useEffect(() => {
     fetchEmployess();
-  }, []);
+  }, [fetchEmployess]);
 
   const filtered = employees.filter((emp) =>
     `${emp.firstName} ${emp.lastName}`
