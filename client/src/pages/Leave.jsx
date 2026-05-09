@@ -8,13 +8,14 @@ import {
   UmbrellaIcon,
 } from "lucide-react";
 import LeaveHistory from "../components/leave/LeaveHistory";
+import ApplyLeaveModal from "../components/leave/ApplyLeaveModal";
 
 const Leave = () => {
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
-  const isAdmin = true; // Replace with actual role checking logic
+  const isAdmin = false; // Replace with actual role checking logic
 
   const fetchLeaves = useCallback(() => {
     setLeaves(dummyLeaveData);
@@ -87,6 +88,11 @@ const Leave = () => {
         </div>
       )}
       <LeaveHistory leaves={leaves} isAdmin={isAdmin} onUpdate={fetchLeaves} />
+      <ApplyLeaveModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        onSuccess={fetchLeaves}
+      />
     </div>
   );
 };
