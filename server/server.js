@@ -9,6 +9,10 @@ import profileRouter from "./routes/profileRoutes.js";
 import attendanceRouter from "./routes/attendanceRoute.js";
 import leaveRouter from "./routes/leaveRoute.js";
 import payslipRouter from "./routes/payslipRoute.js";
+import dashboardRouter from "./routes/dashboardRoute.js";
+
+import { serve } from "inngest/express";
+import { inngest, functions } from "./inngest/index.js"
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -26,6 +30,10 @@ app.use("api/profile", profileRouter);
 app.use("api/attendance", attendanceRouter);
 app.use("api/leave", leaveRouter);
 app.use("api/payslips", payslipRouter);
+app.use("api/dashboard", dashboardRouter);
+
+// Set up the "/api/inngest" (recommended) routes with the serve handler
+app.use("/api/inngest", serve({ client: inngest, functions }));
 
 await connectDB();
 app.listen(PORT, () => console.log(`server running on port ${PORT}`));

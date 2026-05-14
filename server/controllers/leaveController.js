@@ -1,37 +1,54 @@
 import Employee from "../models/Employee.js";
 import LeaveApplication from "../models/LeaveApplication.js";
 
-// Create leave
+/**
+ * Create a new leave application
+ * Validates employee status, leave dates, and required fields
+ * Sets initial status to "PENDING" for admin approval
+ */
 export const createLeave = async (req, res) => {
   try {
+    // Get user ID from session
     const session = req.session;
+
+    // Fetch employee record linked to the current user
     const employee = await Employee.findOne({ userId: session.userId });
     if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+    // Check if employee account is deactivated
     if (employee.isDeleted) {
       return res.status(403).json({
         error: "Your account is deactivated. You cannot apply for leave",
       });
     }
 
+    // Extract leave details from request body
     const { type, startDate, endDate, reason } = req.body;
 
+    // Validate that all required fields are provided
     if (!type || !startDate || !endDate || !reason) {
       return res.status(400).json({ error: "Missing fields" });
     }
 
+    // Get today's date for validation (ignoring time component)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+
+    // Ensure leave dates are in the future (cannot apply for past leave)
     if (new Date(startDate) <= today || new Date(endDate) <= today) {
       return res
         .status(400)
         .json({ error: "Leave dates must be in the future" });
     }
+
+    // Ensure end date is on or after start date
     if (new Date(endDate) < new Date(startDate)) {
       return res
         .status(400)
         .json({ error: "End date must be on or after start date" });
     }
 
+    // Create new leave application with PENDING status
     const leave = await LeaveApplication.create({
       employeeId: employee._id,
       type,
@@ -47,17 +64,25 @@ export const createLeave = async (req, res) => {
   }
 };
 
-// Get leave
+// Get leave applications
+// Returns all leaves for admin, or only leaves for current employee if not admin
 export const getLeave = async (req, res) => {
   try {
     const session = req.session;
     const isAdmin = session.role === "ADMIN";
+
+    // Admin: Retrieve all leave applications with optional status filter
     if (isAdmin) {
+      // Get status filter from query parameters (e.g., APPROVED, REJECTED, PENDING)
       const status = req.query.status;
       const where = status ? { status } : {};
+
+      // Fetch all leave applications, populated with employee details
       const leaves = await LeaveApplication.find(where)
         .populate("employeeId")
         .sort({ createdAt: -1 });
+
+      // Format data with string IDs for frontend compatibility
       const data = leaves.map((leave) => {
         const obj = leave.toObject();
         return {
@@ -68,16 +93,20 @@ export const getLeave = async (req, res) => {
       });
       return res.json({ data });
     } else {
+      // Employee: Retrieve only their own leave applications
       const employee = await Employee.findOne({
         userId: session.userId,
       }).lean();
       if (!employee)
         return res.status(404).json({ error: "Employee not found" });
+
+      // Fetch leave applications for this employee, sorted by creation date
       const leaves = await LeaveApplication.find({
         employeeId: employee._id,
       })
         .sort({ createdAt: -1 })
         .lean();
+
       return res.json({
         data: leaves,
         employee: { ...employee, id: employee._id.toString() },
@@ -88,13 +117,19 @@ export const getLeave = async (req, res) => {
   }
 };
 
-//Update leave
+//Update leave status
+// Admin can update leave application status to APPROVED, REJECTED, or PENDING
 export const updateLeaveStatus = async (req, res) => {
   try {
+    // Extract status from request body
     const { status } = req.body;
+
+    // Validate that status is one of the allowed values
     if (!["APPROVED", "REJECTED", "PENDING"].includes(status)) {
       return res.status(400).json({ error: "Invalid status" });
     }
+
+    // Update the leave application with new status and return updated document
     const leave = await LeaveApplication.findByIdAndUpdate(
       req.params.id,
       {
@@ -102,6 +137,7 @@ export const updateLeaveStatus = async (req, res) => {
       },
       { returnDocument: "after" },
     );
+
     return res.json({ success: true, data: leave });
   } catch (error) {
     return res.status(500).json({ error: "failed" });
