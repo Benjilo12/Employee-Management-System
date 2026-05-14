@@ -3,10 +3,10 @@ import Attendance from "../models/Attendance.js";
 import Employee from "../models/Employee.js";
 import LeaveApplication from "../models/LeaveApplication.js";
 
-// Create a client to send and receive events
+//* Create a client to send and receive events
 export const inngest = new Inngest({ id: "employee-app" });
 
-// Auto Check-out employees
+//* Auto Check-out employees
 const autoCheckOut = inngest.createFunction(
   { id: "auto-check-out", event: "empoyee/check-out" },
   async ({ event, step }) => {
@@ -62,8 +62,101 @@ const LeaveApplicationReminder = inngest.createFunction(
 
     const leaveApplication =
       await LeaveApplication.findById(leaveApplicationId);
+
+    if (leaveApplication?.status === "PENDING") {
+      const enployee = await Employee.findById(leaveApplication.employeeId);
+
+      //Send reminder email to admin to take action on leave application
+    }
   },
 );
 
-// Create an empty array where we'll export future Inngest functions
-export const functions = [autoCheckOut];
+//*Cron: Check attendance at 06:00 GMT and email absent employees
+const attendanceReminderCron = inngest.createFunction(
+  {
+    id: "attendance-reminder-cron",
+    cron: "0 0 6 * * *",
+  },
+  async ({ step }) => {
+    //Step 1: Get today's date range in GMT
+    const today = new step.run("get-today-date", () => {
+      const now = new Date();
+      const startUTC = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          0,
+          0,
+          0,
+        ),
+      );
+      const endUTC = new Date(startUTC.getTime() + 24 * 60 * 60 * 1000);
+      return { startUTC: startUTC.toISOString(), endUTC: endUTC.toISOString() };
+    });
+
+    //Step 2: Get all active, non-deleted employees
+    const activeEmployees = await step.run("get-active-employess", async () => {
+      const employees = await Employee.find({
+        isDeleted: false,
+        employmentStatus: "Active",
+      }).lean();
+      return employees.map((e) => ({
+        _id: e._id.toString(),
+        firstName: e.firstName,
+        lastName: e.lastName,
+        email: e.email,
+        department: e.department,
+      }));
+    });
+
+    //step 3: Get employee IDs on approved leave today
+    const onLeaveIds = await step.run("get-on-leave-ids", async () => {
+      const leaves = await leaveApplication
+        .find({
+          status: "APPROVED",
+          startDate: { $lte: new Date(today.endUTC) },
+          endDate: { $lte: new Date(today.endUTC) },
+        })
+        .lean();
+      return leaves.map((l) => l.employeeId.toString());
+    });
+
+    // Step 4: Get employee IDs who already checked in today
+    const checkedInIds = await step.run("get-checked-ins-ids", async () => {
+      const attendances = await Attendance.find({
+        date: { $gate: new Date(today.startUTC), $lt: new Date(today.endUTC) },
+      }).lean();
+      return attendances.map((a) => a.employeeId.toString());
+    });
+
+    //step 5: fliter absent employees (not on leave & not checked in)
+    const absentEmployees = activeEmployees.filter(
+      (emp) =>
+        !onLeaveIds.includes(emp._id) && !checkedInIds.includes(emp._ids),
+    );
+
+    //step 6: Send reminder emails
+    if (absentEmployees.length > 0) {
+      await step.run("send-reminder-emails", async () => {
+        const emailPromises = absentEmployees.map((emp) => {
+          //send email
+        });
+      });
+    }
+
+    return {
+      totalActive: activeEmployees.length,
+      onLeave: onLeaveIds.length,
+      checkIn: checkedInIds.length,
+      absent: absentEmployees.length,
+    };
+  },
+);
+
+//* Create an empty array where we'll export future Inngest functions
+export const functions = [
+  autoCheckOut,
+  LeaveApplicationReminder,
+  attendanceReminderCron,
+];
