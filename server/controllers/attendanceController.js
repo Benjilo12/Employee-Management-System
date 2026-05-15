@@ -1,6 +1,7 @@
 import { now } from "mongoose";
 import Attendance from "../models/Attendance.js";
 import Employee from "../models/Employee.js";
+import { inngest } from "../inngest/index.js";
 
 /**
  * Clock in/out for employee
@@ -40,6 +41,14 @@ export const clockInOut = async (req, res) => {
         date: today,
         checkIn: now,
         status: isLate ? "LATE" : "PRESENT",
+      });
+
+      await inngest.send({
+        name: "employee/check-out",
+        data: {
+          employeeId: employee._id,
+          attendanceId: attendance._id,
+        },
       });
       return res.json({ success: true, type: "CHECK_IN", date: attendance });
     }
