@@ -1,6 +1,7 @@
 import { inngest } from "../inngest/index.js";
 import Employee from "../models/Employee.js";
 import LeaveApplication from "../models/LeaveApplication.js";
+import { pushNotification } from "../services/notificationService.js";
 
 /**
  * Create a new leave application
@@ -62,6 +63,15 @@ export const createLeave = async (req, res) => {
     await inngest.send({
       name: "leave/pending",
       data: { LeaveApplicationId: leave._id },
+    });
+
+    await pushNotification({
+      title: "New leave request",
+      message: `${employee.firstName} ${employee.lastName} submitted a ${type} leave request.`,
+      senderRole: "SYSTEM",
+      type: "LEAVE_PENDING",
+      targetRole: "ADMIN",
+      metadata: { leaveId: leave._id.toString() },
     });
 
     return res.json({ success: true, data: leave });
@@ -142,7 +152,27 @@ export const updateLeaveStatus = async (req, res) => {
         status,
       },
       { returnDocument: "after" },
-    );
+    ).populate("employeeId");
+
+    if (leave?.employeeId) {
+      const employeeUserId =
+        leave.employeeId.userId?.toString() ||
+        leave.employeeId.UserId?.toString();
+
+      if (employeeUserId) {
+        await pushNotification({
+          title: "Leave status updated",
+          message: `Your leave request has been ${status.toLowerCase()}.`,
+          senderRole: "SYSTEM",
+          type: "LEAVE_STATUS",
+          recipientUserId: employeeUserId,
+          metadata: {
+            leaveId: leave._id.toString(),
+            status,
+          },
+        });
+      }
+    }
 
     return res.json({ success: true, data: leave });
   } catch (error) {
