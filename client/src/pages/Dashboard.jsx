@@ -1,24 +1,21 @@
 import { useEffect, useState } from "react";
-import {
-  dummyEmployeeDashboardData,
-  dummyAdminDashboardData,
-} from "../assets/assets";
+
 import Loading from "../components/Loading";
 import EmpolyeeDashboard from "../components/EmpolyeeDashboard";
 import AdminDashboard from "../components/AdminDashboard";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 
 const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const role = localStorage.getItem("ems_role") || "ADMIN";
-    setData(
-      role === "ADMIN" ? dummyAdminDashboardData : dummyEmployeeDashboardData,
-    );
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    api
+      .get("/dashboard")
+      .then((res) => setData(res.data))
+      .catch((err) => toast.error(err.response?.data?.error || err?.message))
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) {

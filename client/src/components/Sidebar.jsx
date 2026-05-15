@@ -13,22 +13,31 @@ import {
   SettingsIcon,
   ChevronRightIcon,
   LogOutIcon,
+  Loader2,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { useAuth } from "../context/authContext";
+import api from "../api/axios";
 
 export const Sidebar = () => {
   const { pathname } = useLocation();
   const [userName, setUserName] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const { user, loading, logout } = useAuth();
+
   useEffect(() => {
-    setUserName(dummyProfileData.firstName + " " + dummyProfileData.lastName); // Replace with actual user fetching logic
+    // Replace with actual user fetching logic
+    api.get("/profile").then(({ data }) => {
+      if (data.firstName)
+        setUserName(`${data.firstName} ${data.lastName || ""}`.trim());
+    });
   }, []);
   useEffect(() => {
     setMobileOpen(false); // Replace with actual user fetching logic
   }, [pathname]);
 
-  const role = localStorage.getItem("ems_role") || "ADMIN";
+  const role = user?.role;
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutGridIcon },
@@ -38,13 +47,20 @@ export const Sidebar = () => {
     { name: "Leave", href: "/leave", icon: FileTextIcon },
     { name: "PaySlips", href: "/payslips", icon: DollarSignIcon },
     ...(role === "ADMIN"
-      ? [{ name: "Notifications", href: "/admin-notifications", icon: BellIcon }]
+      ? [
+          {
+            name: "Notifications",
+            href: "/admin-notifications",
+            icon: BellIcon,
+          },
+        ]
       : []),
     { name: "Settings", href: "/settings", icon: SettingsIcon },
   ];
 
   // Handle logout functionality
   const handleLogout = () => {
+    logout();
     window.location.href = "/";
   };
 
@@ -105,43 +121,50 @@ export const Sidebar = () => {
 
         {/* Navigation List */}
         <div className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-          {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={`group relative flex items-center gap-5 px-3 py-5.5 rounded-lg text-sm transition-all duration-200
+          {loading ? (
+            <div>
+              <Loader2 className="animate-spin w-4 h-4" />
+              <span className="text-sm">Loading...</span>
+            </div>
+          ) : (
+            navItems.map((item) => {
+              const isActive = pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={`group relative flex items-center gap-5 px-3 py-5.5 rounded-lg text-sm transition-all duration-200
           ${
             isActive
               ? "bg-indigo-500/10 text-white"
               : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
           }`}
-              >
-                {/* Active indicator bar */}
-                {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-indigo-500" />
-                )}
+                >
+                  {/* Active indicator bar */}
+                  {isActive && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-r-full bg-indigo-500" />
+                  )}
 
-                {/* Icon */}
-                <item.icon
-                  className={`w-4 h-4 shrink-0 ${
-                    isActive
-                      ? "text-indigo-400"
-                      : "text-slate-400 group-hover:text-slate-300"
-                  }`}
-                />
+                  {/* Icon */}
+                  <item.icon
+                    className={`w-4 h-4 shrink-0 ${
+                      isActive
+                        ? "text-indigo-400"
+                        : "text-slate-400 group-hover:text-slate-300"
+                    }`}
+                  />
 
-                {/* Label */}
-                <span className="flex-1 font-medium">{item.name}</span>
+                  {/* Label */}
+                  <span className="flex-1 font-medium">{item.name}</span>
 
-                {/* Chevron */}
-                {isActive && (
-                  <ChevronRightIcon className="w-3.5 h-3.5 text-indigo-500/50" />
-                )}
-              </Link>
-            );
-          })}
+                  {/* Chevron */}
+                  {isActive && (
+                    <ChevronRightIcon className="w-3.5 h-3.5 text-indigo-500/50" />
+                  )}
+                </Link>
+              );
+            })
+          )}
         </div>
 
         {/* Theme and logout actions */}

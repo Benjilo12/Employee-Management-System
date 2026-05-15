@@ -4,6 +4,6 @@ import { getProfile, updateProfile } from "../controllers/profileController.js";
 const profileRouter = Router();
 
 profileRouter.get("/", protect, getProfile);
-profileRouter.get("/", protect, updateProfile);
+profileRouter.put("/", protect, updateProfile);
 
 export default profileRouter;

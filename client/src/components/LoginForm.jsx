@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { ArrowLeftIcon, EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/authContext";
+import toast from "react-hot-toast";
 
 const LoginForm = ({ role, title, subtitle }) => {
   const navigate = useNavigate();
@@ -10,13 +12,23 @@ const LoginForm = ({ role, title, subtitle }) => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     setLoading(true);
-    localStorage.setItem("ems_role", role?.toUpperCase() === "ADMIN" ? "ADMIN" : "EMPLOYEE");
-    navigate("/dashboard");
+    try {
+      await login(email, password, role);
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.error || error.message || "Login failed",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Shared class for inputs to keep it clean

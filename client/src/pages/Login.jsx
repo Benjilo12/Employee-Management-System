@@ -1,8 +1,20 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import LoginLeftSide from "../components/LoginLeftSide";
 import { ArrowRightIcon, ShieldIcon, UserIcon } from "lucide-react";
+import { useAuth } from "../context/authContext";
+import Loading from "../components/Loading";
 
 const Login = () => {
+  // Get authenticated user state and loading status from auth context
+  const { user, loading } = useAuth();
+
+  // Show spinner while auth status is being checked
+  if (loading) return <Loading />;
+
+  // Redirect already authenticated users away from the login page
+  if (user) return <Navigate to="/" />;
+
+  // Different login portals available for admin and employee
   const portalOptions = [
     {
       to: "/login/admin",
@@ -24,7 +36,7 @@ const Login = () => {
     <div className="min-h-screen flex flex-col md:flex-row">
       <LoginLeftSide />
 
-      {/* RIGHT SIDE */}
+      {/* RIGHT SIDE: Portal selection panel */}
       <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-8 sm:p-14 lg:p-20 bg-gray-50 relative overflow-hidden min-h-screen">
         {/* Background decoration */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-100 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/2" />
