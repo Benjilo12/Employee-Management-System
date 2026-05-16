@@ -1,22 +1,35 @@
 import { useEffect, useState } from "react";
-import { dummyProfileData } from "../assets/assets";
+
 import Loading from "../components/Loading";
 import { Lock } from "lucide-react";
 import ProfileForm from "../components/ProfileForm";
 import ChangePasswordModal from "../components/ChangePasswordModal";
+import { useAuth } from "../context/authContext";
+import api from "../api/axios";
+import toast from "react-hot-toast";
 
+// Settings page: manage account and preferences
 const Settings = () => {
+  const { user } = useAuth();
+  // component state
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
+  // Fetch user's profile from the API
   const fetchProfile = async () => {
-    setProfile(dummyProfileData);
-    setTimeout(() => {
+    try {
+      const res = await api.get("/profile");
+      const profile = res.data;
+      if (profile) setProfile(profile);
+    } catch (error) {
+      toast.error(error.response.data.error || error?.message);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
+  // Load profile when component mounts
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -29,6 +42,7 @@ const Settings = () => {
         <p className="page-subtitle">Manage your account and preferences</p>
       </div>
       {profile && (
+        // Profile form: edit personal details
         <ProfileForm initialData={profile} onSuccess={fetchProfile} />
       )}
 

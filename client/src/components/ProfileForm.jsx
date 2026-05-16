@@ -1,13 +1,32 @@
 import { Loader2, Save, User } from "lucide-react";
 import { useState } from "react";
+import api from "../api/axios";
 
+// ProfileForm: edit public profile and bio
 const ProfileForm = ({ initialData, onSuccess }) => {
+  // form state
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
+  // submit handler: post profile updates to server
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+    setMessage("");
+    const formData = new FormData(e.currentTarget); // collect form fields
+    try {
+      // use PUT since server route expects PUT /api/profile
+      await api.put("/profile", formData);
+      setMessage("Profile updated successfully");
+      onSuccess?.();
+    } catch (error) {
+      // display API or network error
+      setError(error.response?.data?.error || error.message);
+    } finally {
+      setLoading(false);
+    }
   };
   return (
     <form onSubmit={handleSubmit} className="card p-5 sm:p-6 mb-6">
@@ -29,6 +48,7 @@ const ProfileForm = ({ initialData, onSuccess }) => {
       )}
 
       <div className="space-y-5">
+        {/* Profile fields */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label
@@ -37,6 +57,7 @@ const ProfileForm = ({ initialData, onSuccess }) => {
             >
               Name
             </label>
+            {/* name is read-only */}
             <input
               disabled
               value={`${initialData.firstName} ${initialData.lastName}`}
@@ -50,6 +71,7 @@ const ProfileForm = ({ initialData, onSuccess }) => {
             >
               Email
             </label>
+            {/* email is read-only */}
             <input
               disabled
               value={initialData.email}
@@ -63,6 +85,7 @@ const ProfileForm = ({ initialData, onSuccess }) => {
             >
               Position
             </label>
+            {/* position is read-only */}
             <input
               disabled
               value={initialData.position}
@@ -77,6 +100,7 @@ const ProfileForm = ({ initialData, onSuccess }) => {
           >
             Bio
           </label>
+          {/* editable bio (disabled if account deactivated) */}
           <textarea
             disabled={initialData.isDeleted}
             name="bio"
@@ -90,6 +114,7 @@ const ProfileForm = ({ initialData, onSuccess }) => {
         </div>
         {initialData.isDeleted ? (
           <div className="pt-2">
+            {/* deactivated account notice */}
             <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-center">
               <p className="text-rose-600 font-medium tracking-tight">
                 Account Deactivated
@@ -111,6 +136,7 @@ const ProfileForm = ({ initialData, onSuccess }) => {
               ) : (
                 <Save className="w-4 h-4" />
               )}
+              {/* submit button */}
               Save Changes
             </button>
           </div>
