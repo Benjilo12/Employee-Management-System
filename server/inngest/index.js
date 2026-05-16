@@ -186,9 +186,10 @@ const attendanceReminderCron = inngest.createFunction(
                             </div>`,
           });
         });
+        await Promise.all(emailPromises);
+        return { emailsSent: absentEmployees.length };
       });
     }
-    await Promise.all(emailPromises);
 
     return {
       totalActive: activeEmployees.length,
