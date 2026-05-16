@@ -1,9 +1,12 @@
 import { CalendarDays, FileText, Loader2, Send, X } from "lucide-react";
 import { useState } from "react";
+import api from "../../api/axios";
+import toast from "react-hot-toast";
 
 const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
 
+  // only allow leave start/end dates from tomorrow onward
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
@@ -11,6 +14,18 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    // collect form values into a plain object
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      await api.post("/leave", data);
+      onSuccess();
+      onClose();
+    } catch (error) {
+      toast.error(error.response?.data?.error || error?.message);
+    }
   };
 
   if (!open) return null;
@@ -69,7 +84,9 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
             </label>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="block text-xs text-slate-400 dark:text-slate-500 mb-1">From</span>
+                <span className="block text-xs text-slate-400 dark:text-slate-500 mb-1">
+                  From
+                </span>
                 <input
                   type="date"
                   name="startDate"
@@ -79,7 +96,9 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
                 />
               </div>
               <div>
-                <span className="block text-xs text-slate-400 dark:text-slate-500 mb-1">To</span>
+                <span className="block text-xs text-slate-400 dark:text-slate-500 mb-1">
+                  To
+                </span>
                 <input
                   type="date"
                   name="endDate"
@@ -112,7 +131,7 @@ const ApplyLeaveModal = ({ open, onClose, onSuccess }) => {
             <button
               type="button"
               className="btn-secondary flex-1 cursor-pointer"
-              onClick={onClose}
+              // onClick={onClose}
             >
               Cancel
             </button>

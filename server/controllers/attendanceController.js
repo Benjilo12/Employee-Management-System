@@ -1,4 +1,3 @@
-import { now } from "mongoose";
 import Attendance from "../models/Attendance.js";
 import Employee from "../models/Employee.js";
 import { inngest } from "../inngest/index.js";
@@ -14,16 +13,17 @@ export const clockInOut = async (req, res) => {
     // Get user session and find associated employee
     const session = req.session;
     const employee = await Employee.findOne({ userId: session.userId });
-    if (!employee) return res.Status(404).json({ error: "Employee not found" });
+    if (!employee) return res.status(404).json({ error: "Employee not found" });
 
     // Check if employee account is deactivated
     if (employee.isDeleted)
-      return res.Status(403).json({
-        erreor: "Your account is deactivated. You cannot clock in/out",
+      return res.status(403).json({
+        error: "Your account is deactivated. You cannot clock in/out",
       });
 
     // Get today's date (ignoring time component) for attendance record
-    const today = new Date();
+    const now = new Date();
+    const today = new Date(now);
     today.setHours(0, 0, 0, 0);
 
     // Check if attendance record already exists for today
@@ -114,6 +114,6 @@ export const getAttendance = async (req, res) => {
       employee: { isDeleted: employee.isDeleted },
     });
   } catch (error) {
-    return res.Status(500).json({ error: "Operation failed attendance" });
+    return res.status(500).json({ error: "Operation failed attendance" });
   }
 };

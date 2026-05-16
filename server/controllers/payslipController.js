@@ -61,8 +61,8 @@ export const getPayslip = async (req, res) => {
         return {
           ...obj,
           id: obj._id.toString(),
-          Employee: obj.employeeId,
-          employeeId: obj.employeeId?.id?.toString(),
+          employee: obj.employeeId,
+          employeeId: obj.employeeId?._id?.toString(),
         };
       });
       return res.json({ data });
@@ -73,7 +73,7 @@ export const getPayslip = async (req, res) => {
 
       // Fetch payslips for this employee, sorted by creation date
       const payslips = await Payslip.find({ employeeId: employee._id }).sort({
-        created: -1,
+        createdAt: -1,
       });
       return res.json({ data: payslips });
     }

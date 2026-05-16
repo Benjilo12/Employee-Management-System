@@ -22,7 +22,7 @@ export const protect = (req, res, next) => {
 
     // Attach the decoded session payload to the request for downstream use
     req.session = session;
-    next();
+    if (typeof next === "function") next();
   } catch (error) {
     // Catches expired, malformed, or invalid tokens from jwt.verify
     return res.status(401).json({ error: "Unauthorized" });

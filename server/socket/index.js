@@ -19,14 +19,21 @@ export const initSocket = (httpServer) => {
     try {
       const token = socket.handshake.auth?.token;
       if (!token) {
-        return next(new Error("Unauthorized"));
+        if (typeof next === "function") {
+          return next(new Error("Unauthorized"));
+        }
+        return socket.disconnect(true);
       }
 
       const session = jwt.verify(token, process.env.JWT_SECRET);
       socket.session = session;
-      next();
+      if (typeof next === "function") next();
     } catch {
-      next(new Error("Unauthorized"));
+      if (typeof next === "function") {
+        next(new Error("Unauthorized"));
+      } else {
+        socket.disconnect(true);
+      }
     }
   });
 

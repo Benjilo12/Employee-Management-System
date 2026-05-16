@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { dummyEmployeeData, DEPARTMENTS } from "../assets/assets";
+import { DEPARTMENTS } from "../assets/assets";
 import { useCallback } from "react";
 import { PlusIcon, Search, X } from "lucide-react";
 import EmpolyeeCard from "../components/EmpolyeeCard";
 import EmployeeForm from "../components/EmployeeForm";
+import api from "../api/axios";
 
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
@@ -15,15 +16,17 @@ const Employees = () => {
 
   // Simulate fetching employees from an API
   const fetchEmployess = useCallback(async () => {
-    setLoading(true);
-    setEmployees(
-      dummyEmployeeData.filter((emp) =>
-        selectedDepartment ? emp.department === selectedDepartment : emp,
-      ),
-    );
-    setTimeout(() => {
+    try {
+      const url = selectedDepartment
+        ? `/employees?department=${selectedDepartment}`
+        : "/employees";
+      const res = await api.get(url);
+      setEmployees(res.data);
+    } catch (error) {
+      console.error("failed to fetch employees");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   }, [selectedDepartment]);
 
   // Fetch employees on component mount
@@ -97,7 +100,7 @@ const Employees = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
             {filtered.length === 0 ? (
-              <p className="col-span-full text-center py-16 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">
+              <p className="col-span-full text-center py-16 text-slate-400 bg-white dark:bg-gray-900 dark:text-gray-300 rounded-2xl border border-dashed border-slate-200">
                 No employees found.
               </p>
             ) : (
@@ -146,7 +149,7 @@ const Employees = () => {
             <div className="p-6">
               <EmployeeForm
                 onSuccess={() => {
-                  showCreateModal(false);
+                  setShowCreateModal(false);
                   fetchEmployess();
                 }}
                 onCancel={() => setShowCreateModal(false)}

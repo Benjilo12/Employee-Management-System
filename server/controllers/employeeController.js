@@ -8,25 +8,28 @@ export const getEmployees = async (req, res) => {
   try {
     const { department } = req.query;
 
-    // Build filter object — only apply department filter if provided
-    const where = {};
+    // Build filter object — exclude soft-deleted records and apply department filter if provided
+    const where = { isDeleted: { $ne: true } };
     if (department) where.department = department;
 
     // Fetch employees and attach their linked user's email and role
     const employees = await Employee.find(where)
+      .sort({ createdAt: -1 })
       .populate("userId", "email role")
+      .populate("UserId", "email role")
       .lean();
 
     // Sort by newest first and reshape each record for the client
     const result = employees
       .toSorted((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .map((emp) => ({
-        ...emp,
-        id: emp._id.toString(),
-        user: emp.userId
-          ? { email: emp.userId.email, role: emp.userId.role }
-          : null,
-      }));
+      .map((emp) => {
+        const userRef = emp.userId || emp.UserId;
+        return {
+          ...emp,
+          id: emp._id.toString(),
+          user: userRef ? { email: userRef.email, role: userRef.role } : null,
+        };
+      });
 
     return res.json(result);
   } catch (error) {
@@ -64,10 +67,12 @@ export const createEmployee = async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
 
     // Create the user account first to get the userId reference
+    // Validate and map role value - only allow ADMIN or EMPLOYEE
+    const validRole = ["ADMIN", "EMPLOYEE"].includes(role) ? role : "EMPLOYEE";
     const user = await User.create({
       email,
       password: hashed,
-      role: role || "EMPLOYEE",
+      role: validRole,
     });
 
     // Create the employee record linked to the user account
@@ -75,6 +80,7 @@ export const createEmployee = async (req, res) => {
     try {
       const employee = await Employee.create({
         userId: user._id,
+        UserId: user._id,
         firstName,
         lastName,
         email,
@@ -142,7 +148,7 @@ export const updateEmployee = async (req, res) => {
         employmentStatus: employmentStatus || "ACTIVE",
         bio: bio || "",
       },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!employee) return res.status(404).json({ error: "Employee not found" });
@@ -153,7 +159,8 @@ export const updateEmployee = async (req, res) => {
     if (password) userUpdate.password = await bcrypt.hash(password, 10);
 
     // Update the linked user account
-    await User.findByIdAndUpdate(employee.userId, userUpdate);
+    const employeeUserId = employee.userId || employee.UserId;
+    await User.findByIdAndUpdate(employeeUserId, userUpdate);
 
     return res.json({ success: true });
   } catch (error) {
@@ -182,6 +189,8 @@ export const deleteEmployee = async (req, res) => {
     return res.json({ success: true });
   } catch (error) {
     console.error("Delete employee error:", error);
-    return res.status(500).json({ error: "Failed to delete employee" });
+    return res
+      .status(500)
+      .json({ error: error.message || "Failed to delete employee" });
   }
 };

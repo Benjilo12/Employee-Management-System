@@ -1,9 +1,12 @@
 import { Loader2, Plus, X } from "lucide-react";
 import { useState } from "react";
+import api from "../../api/axios";
+import toast from "react-hot-toast";
 const GeneratePayslipForm = ({ employees, onSuccess }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setloading] = useState(false);
 
+  // show button until modal is opened
   if (!isOpen)
     return (
       <button
@@ -17,6 +20,19 @@ const GeneratePayslipForm = ({ employees, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setloading(true);
+    const formData = new FormData(e.currentTarget);
+    const data = Object.fromEntries(formData.entries());
+
+    // send payslip data to server
+    try {
+      await api.post("/payslips", data);
+      setIsOpen(false);
+      onSuccess();
+    } catch (error) {
+      toast.error(error.response?.data?.error || error?.message);
+    }
+    setloading(false);
   };
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -46,7 +62,7 @@ const GeneratePayslipForm = ({ employees, onSuccess }) => {
               ))}
             </select>
           </div>
-          {/* selcet month & year */}
+          {/* select month & year */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 dark:text-slate-300">
@@ -85,7 +101,12 @@ const GeneratePayslipForm = ({ employees, onSuccess }) => {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-sm font-medium">Allowance</label>
-              <input type="number" name="allowance" required defaultValue="0" />
+              <input
+                type="number"
+                name="allowances"
+                required
+                defaultValue="0"
+              />
             </div>
             <div>
               <label className="block text-sm font-medium">Deductions</label>
@@ -111,7 +132,6 @@ const GeneratePayslipForm = ({ employees, onSuccess }) => {
             <button
               className="btn-primary flex items-center cursor-pointer"
               type="submit"
-              onClick={() => setIsOpen(false)}
               disabled={loading}
             >
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

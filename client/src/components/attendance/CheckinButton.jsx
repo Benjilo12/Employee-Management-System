@@ -1,29 +1,39 @@
 import { Loader2Icon, LogInIcon, LogOutIcon } from "lucide-react";
 import { useState } from "react";
+import api from "../../api/axios";
+import toast from "react-hot-toast";
 
 const CheckinButton = ({ todayRecord, onAction }) => {
   const [loading, setLoading] = useState(false);
 
+  // Clock in/out request
   const handleAttendance = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await api.post("/attendance");
       onAction();
-    }, 1000);
+    } catch (error) {
+      toast.error(error?.response?.data?.error || error?.message);
+    }
+    setLoading(false);
   };
-  if (todayRecord?.checkout) {
+
+  // If already checked out, show completed banner
+  if (todayRecord?.checkOut) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 bg-slate-50 rounded-2xl border border-slate-200">
-        <h3 className="text-lg font-bold  text-slate-900">
+      <div className="flex flex-col items-center justify-center p-8 bg-slate-50 rounded-2xl border border-slate-200 dark:bg-gray-800">
+        <h3 className="text-lg font-bold  text-slate-900 dark:text-gray-200">
           Work Day Completed
         </h3>
-        <p className="text-slate-600 text-sm mt-1">
+        <p className="text-slate-600 text-sm mt-1 dark:text-gray-500">
           Great job! see you tomorrow.
         </p>
       </div>
     );
   }
-  const isCheckedIn = !!todayRecord?.isCheckedIn;
+
+  // Use checkIn presence to decide state
+  const isCheckedIn = !!todayRecord?.checkIn;
 
   return (
     <div className="absolute bottom-4 right-4 flex flex-col z-1">

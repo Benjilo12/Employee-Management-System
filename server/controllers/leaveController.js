@@ -76,7 +76,8 @@ export const createLeave = async (req, res) => {
 
     return res.json({ success: true, data: leave });
   } catch (error) {
-    return res.status(500).json({ error: "Failed" });
+    console.error("Create leave error:", error);
+    return res.status(500).json({ error: error.message || "Failed" });
   }
 };
 
@@ -98,13 +99,15 @@ export const getLeave = async (req, res) => {
         .populate("employeeId")
         .sort({ createdAt: -1 });
 
-      // Format data with string IDs for frontend compatibility
+      // Format data with string IDs and include populated employee details
       const data = leaves.map((leave) => {
         const obj = leave.toObject();
         return {
           ...obj,
           id: obj._id.toString(),
-          employee: obj.employeeId?._id?.toString(),
+          employee: obj.employeeId
+            ? { ...obj.employeeId, id: obj.employeeId._id.toString() }
+            : null,
         };
       });
       return res.json({ data });

@@ -1,3 +1,6 @@
+import toast from "react-hot-toast";
+import api from "../api/axios";
+
 const EmpolyeeCard = ({ employee, onDelete, onEdit }) => {
   const initials = `${employee.firstName?.charAt(0) ?? ""}${employee.lastName?.charAt(0) ?? ""}`;
 
@@ -8,13 +11,19 @@ const EmpolyeeCard = ({ employee, onDelete, onEdit }) => {
       )
     )
       return;
+    try {
+      await api.delete(`/employees/${employee.id}`);
+      onDelete();
+    } catch (error) {
+      toast.error(error.response?.data?.error || error.message);
+    }
   };
 
   return (
     <div className="group relative card card-hover overflow-hidden border border-slate-200 bg-white transition-colors dark:border-slate-700 dark:bg-slate-800">
       <div className="p-5 text-center">
         <div className="mb-4 flex justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-100 to-slate-100 dark:from-indigo-500/25 dark:to-slate-700">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-br from-indigo-100 to-slate-100 dark:from-indigo-500/25 dark:to-slate-700">
             <span className="text-2xl font-semibold text-indigo-600 dark:text-indigo-300">
               {initials}
             </span>
