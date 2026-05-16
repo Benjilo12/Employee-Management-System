@@ -3,7 +3,7 @@ import api from "../api/axios";
 import AuthContext from "./authContext";
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(localStorage.getItem("token"));
+  const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 

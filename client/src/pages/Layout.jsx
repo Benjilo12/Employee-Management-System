@@ -10,7 +10,7 @@ const Layout = () => {
   if (loading) return <Loading />;
 
   // Redirect unauthenticated users to the login page
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/" replace />;
 
   // Render protected layout after auth is confirmed
   return (

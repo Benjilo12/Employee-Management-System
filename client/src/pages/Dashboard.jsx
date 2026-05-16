@@ -8,7 +8,7 @@ import toast from "react-hot-toast";
 
 const Dashboard = () => {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api

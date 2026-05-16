@@ -12,7 +12,7 @@ const Login = () => {
   if (loading) return <Loading />;
 
   // Redirect already authenticated users away from the login page
-  if (user) return <Navigate to="/" />;
+  if (user) return <Navigate to="/dashboard" replace />;
 
   // Different login portals available for admin and employee
   const portalOptions = [
