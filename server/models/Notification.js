@@ -25,6 +25,7 @@ const notificationSchema = new mongoose.Schema(
       default: null,
     },
     metadata: { type: mongoose.Schema.Types.Mixed, default: {} },
+    dismissedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true },
 );

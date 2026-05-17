@@ -1,8 +1,8 @@
 import { BuildingIcon, CalendarIcon, FileTextIcon } from "lucide-react";
-import { getNotifications } from "../utils/notifications";
+import { useNotifications } from "../context/NotificationContext";
 
 const AdminDashboard = ({ data }) => {
-  const notifications = getNotifications();
+  const { notifications } = useNotifications();
   const stats = [
     {
       icon: CalendarIcon,

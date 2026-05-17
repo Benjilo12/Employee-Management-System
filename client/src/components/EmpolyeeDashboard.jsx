@@ -1,16 +1,14 @@
 import {
-  BellIcon,
   CalendarIcon,
   FileTextIcon,
   DollarSignIcon,
   ArrowRightIcon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { getNotifications } from "../utils/notifications";
+import NotificationDropdown from "./NotificationDropdown";
 
 const EmpolyeeDashboard = ({ data }) => {
   const emp = data.employee;
-  const notifications = getNotifications();
   const cards = [
     {
       icon: CalendarIcon,
@@ -44,18 +42,7 @@ const EmpolyeeDashboard = ({ data }) => {
             {emp?.position} - {emp?.department || "No Department"}
           </p>
         </div>
-        <button
-          type="button"
-          className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-          aria-label="Notifications"
-        >
-          <BellIcon className="h-5 w-5" />
-          {notifications.length > 0 && (
-            <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white">
-              {notifications.length}
-            </span>
-          )}
-        </button>
+        <NotificationDropdown />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5 mb-8">
         {cards.map((card, index) => (

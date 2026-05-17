@@ -39,18 +39,30 @@ export const getNotifications = async (req, res) => {
     const session = req.session;
     const isAdmin = session.role === "ADMIN";
 
+    const notDismissed = { dismissedBy: { $ne: session.userId } };
+
     const filter = isAdmin
       ? {
-          $or: [
-            { targetRole: "ADMIN" },
-            { recipientUserId: session.userId },
-            { senderRole: "ADMIN" },
+          $and: [
+            notDismissed,
+            {
+              $or: [
+                { targetRole: "ADMIN" },
+                { recipientUserId: session.userId },
+                { senderRole: "ADMIN" },
+              ],
+            },
           ],
         }
       : {
-          $or: [
-            { targetRole: "EMPLOYEE" },
-            { recipientUserId: session.userId },
+          $and: [
+            notDismissed,
+            {
+              $or: [
+                { targetRole: "EMPLOYEE" },
+                { recipientUserId: session.userId },
+              ],
+            },
           ],
         };
 
@@ -73,5 +85,66 @@ export const getNotifications = async (req, res) => {
   } catch (error) {
     console.error("Get notifications error:", error);
     return res.status(500).json({ error: "Failed to fetch notifications" });
+  }
+};
+
+const adminCanAccess = (notification, userId) =>
+  notification.senderRole === "ADMIN" ||
+  notification.targetRole === "ADMIN" ||
+  notification.recipientUserId?.toString() === userId;
+
+const employeeCanAccess = (notification, userId) =>
+  notification.targetRole === "EMPLOYEE" ||
+  notification.recipientUserId?.toString() === userId;
+
+export const deleteNotification = async (req, res) => {
+  try {
+    const session = req.session;
+    const notification = await Notification.findById(req.params.id);
+
+    if (!notification) {
+      return res.status(404).json({ error: "Notification not found" });
+    }
+
+    if (session.role === "ADMIN") {
+      if (!adminCanAccess(notification, session.userId)) {
+        return res
+          .status(403)
+          .json({ error: "Not allowed to delete this notification" });
+      }
+
+      // Permanently remove admin broadcasts; dismiss system alerts from admin view only
+      if (
+        notification.senderRole === "ADMIN" &&
+        notification.type === "GENERAL"
+      ) {
+        await Notification.findByIdAndDelete(req.params.id);
+      } else {
+        await Notification.findByIdAndUpdate(req.params.id, {
+          $addToSet: { dismissedBy: session.userId },
+        });
+      }
+
+      return res.json({ success: true });
+    }
+
+    if (session.role === "EMPLOYEE") {
+      if (!employeeCanAccess(notification, session.userId)) {
+        return res
+          .status(403)
+          .json({ error: "Not allowed to delete this notification" });
+      }
+
+      await Notification.findByIdAndUpdate(req.params.id, {
+        $addToSet: { dismissedBy: session.userId },
+      });
+
+      return res.json({ success: true });
+    }
+
+    return res.status(403).json({ error: "Not allowed to delete notifications" });
+  } catch (error) {
+    console.error("Delete notification error:", error);
+    return res.status(500).json({ error: "Failed to delete notification" });
   }
 };
